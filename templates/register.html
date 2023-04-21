@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>Registration Page</title>
+    <style>
+        body {
+            background-color: #F5F5F5;
+            font-family: Arial, sans-serif;
+        }
+
+        header {
+            background-color: green;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .container {
+            margin: 50px auto;
+            width: 600px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .form {
+            width: 600px;
+            background-color: #fff;
+            border-radius: 5px;
+            padding: 20px;
+            box-shadow: 0px 0px 5px 0px rgba(0, 0, 0, 0.3);
+            margin: 0 20px;
+        }
+
+        h1 {
+            text-align: center;
+            margin-top: 0;
+        }
+
+        input[type="text"],
+        input[type="email"],
+        input[type="tel"],
+        input[type="password"] {
+            width: 100%;
+            padding: 10px;
+            border-radius: 5px;
+            border: none;
+            background-color: #F5F5F5;
+            margin-bottom: 5px;
+            box-sizing: border-box;
+        }
+
+        input[type="submit"] {
+            background-color: green;
+            color: #fff;
+            border: none;
+            padding: 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            width: 100%;
+        }
+
+        input[type="submit"]:hover {
+            background-color: crimson;
+        }
+
+        .form-row {
+            display: flex;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+
+        .form-row label {
+            flex: 1;
+            margin-right: 20px;
+        }
+
+        .form-row input[type="text"],
+        input[type="tel"],
+        [type="password"],
+        [type="email"] {
+            flex: 2;
+        }
+        .form-row select {
+			flex: 1;
+			padding: 10px;
+			border-radius: 5px;
+			border: none;
+			background-color: #F5F5F5;
+			margin-right: 20px;
+			box-sizing: border-box;
+            margin-bottom: 10px;
+		}
+    </style>
+</head>
+
+<body>
+    <header>
+        <h1>Food Delivery Website</h1>
+    </header>
+    <div class="container">
+        <div class="form">
+            <h1>Register User</h1>
+            <form>
+                <div class="form-row">
+					<label for="user">User Type:</label>
+					<select id="user" name="user" required>
+                        <option value="" selected disabled>Select User Type</option>
+					    <option value="Customer">Customer</option>
+						<option value="Restaurant">Restaurant</option>
+                    </select>
+                </div>
+                <div class="form-row">
+                    <label for="name">Name:</label>
+                    <input type="text" id="name" name="name" required>
+                </div>
+                <div class="form-row">
+                    <label for="name">Name:</label>
+                    <input type="text" id="name" name="name" required>
+                </div>
+                <div class="form-row">
+                    <label for="phone">Phone:</label>
+                    <input type="tel" id="phone" name="phone" required>
+                </div>
+                <div class="form-row">
+                    <label for="street">Street:</label>
+                    <input type="text" id="street" name="street" required>
+                </div>
+                <div class="form-row">
+                    <label for="city">City:</label>
+                    <input type="text" id="city" name="city" required>
+                </div>
+                <div class="form-row">
+                    <label for="state">State:</label>
+                    <input type="text" id="state" name="state" required>
+                </div>
+                <div class="form-row">
+                    <label for="pincode">Pincode:</label>
+                    <input type="text" id="pincode" name="pincode" required>
+                </div>
+                <div class="form-row">
+                    <label for="email">Email:</label>
+                    <input type="email" id="email" name="email" required>
+                </div>
+                <div class="form-row">
+                    <label for="password">Password:</label>
+                    <input type="password" id="password" name="password" required>
+                </div>
+                <div class="form-row">
+                    <label for="confirm-password">Confirm Password:</label>
+                    <input type="password" id="confirm-password" name="confirm-password" required>
+                </div>
+                <input type="submit" value="Register">
+            </form>
+        </div>
+    </div>
+</body>
+
+</html>
