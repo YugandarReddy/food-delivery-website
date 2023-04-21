@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Restaurant List</title>
+    <style>
+      /* Styles for the header */
+      header {
+        background-color: green;
+        padding: 20px;
+        text-align: center;
+      }
+      h1 {
+        font-size: 36px;
+        margin: 0;
+      }
+      /* Styles for the main content */
+      main {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        padding: 20px;
+      }
+      .item {
+        background-color: #f7f7f7;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        box-shadow: 2px 2px 5px #ccc;
+        margin: 10px;
+        padding: 10px;
+        width: 300px;
+      }
+      .item h2 {
+        text-align: center;
+        font-size: 24px;
+        margin: 0;
+      }
+      .item p {
+        text-align: center;
+        font-size: 18px;
+        margin: 0;
+      }
+      input[type="submit"] {
+            background-color: green;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            width: 100%;
+            font-size: 18px;
+            padding: 10px 20px;
+            transition: background-color 0.3s;
+        }
+        
+        input[type="submit"]:hover {
+            background-color: crimson;
+        }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>Restaurant List</h1>
+    </header>
+    <main>
+      
+        {%for restaurant in restaurants%}
+        <div class="item">
+            <h2>{{restaurant["Name"]}}</h2>
+            <p>{{restaurant["City"]}},{{restaurant["State"]}},{{restaurant["PinCode"]}}</p>
+            <p><strong>Delivery Fee:</strong> {{restaurant["DeliveryFee"]}}</p>
+            <input type="submit" value="Order">
+          </div>
+          {% endfor %}
+      </div>
+    </main>
+  </body>
+</html>
