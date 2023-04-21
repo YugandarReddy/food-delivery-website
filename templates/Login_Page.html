@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Food Delivery Home Page</title>
+    <style>
+        body {
+            background-color: #F5F5F5;
+            font-family: Arial, sans-serif;
+        }
+
+        header {
+            background-color: green;
+            padding: 20px;
+            text-align: center;
+        }
+
+        h1 {
+            text-align: center;
+            margin-top: 0;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 10px;
+        }
+
+
+        .container {
+            margin: 50px auto;
+            width: 800px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .form {
+            width: 400px;
+            background-color: #fff;
+            border-radius: 5px;
+            padding: 20px;
+            box-shadow: 0px 0px 5px 0px rgba(0, 0, 0, 0.3);
+            margin: 0 20px;
+        }
+
+        input[type="text"],
+        input[type="password"] {
+            width: 100%;
+            padding: 10px;
+            border-radius: 5px;
+            border: none;
+            background-color: #F5F5F5;
+            margin-bottom: 20px;
+            box-sizing: border-box;
+        }
+
+        input[type="submit"] {
+            background-color: green;
+            color: #fff;
+            border: none;
+            padding: 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            width: 100%;
+        }
+
+        input[type="submit"]:hover {
+            background-color: crimson;
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <h1>Food Delivery Website</h1>
+    </header>
+    <div class="container">
+        <div class="form">
+            <h1>Login/Register</h1>
+            <form action="" method="post">
+                <label for="Phone">Phone:</label>
+                <input type="text" id="user-username" name="username" required>
+                <label for="user-password">Password:</label>
+                <input type="password" id="user-password" name="password" required>
+                <div>
+                    <input type="submit" value="Login">
+                    <p></p>
+                    <input type="submit" value="Register" onClick="register()"">
+                    <script>
+                        function register() {
+                            window.location.href = " register.html";
+                        } </script>
+                </div>
+            </form>
+        </div>
+    </div>
+</body>
+
+</html>
