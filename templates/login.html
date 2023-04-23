@@ -69,6 +69,19 @@
         input[type="submit"]:hover {
             background-color: crimson;
         }
+        .msg{
+            color: crimson
+        }
+        .form select {
+			flex: 1;
+			padding: 10px;
+			border-radius: 5px;
+			border: none;
+			background-color: #F5F5F5;
+			margin-right: 20px;
+			box-sizing: border-box;
+            margin-bottom: 10px;
+		}
     </style>
 </head>
 
@@ -80,6 +93,12 @@
         <div class="form">
             <h1>Login/Register</h1>
             <form action="/login" method="POST">
+					<label for="user_type">User Type:</label>
+					<select id="user_type" name="user_type" required>
+                        <option value="" selected disabled>Select User Type</option>
+					    <option value="Customer" selected>Customer</option>
+						<option value="Restaurant">Restaurant</option>
+                    </select>
                 <label for="Phone">Phone:</label>
                 <input type="text" id="user-username" name="username" required>
                 <label for="user-password">Password:</label>
@@ -87,6 +106,8 @@
                 <div>
                     <input type="submit" value="Login">
                 </div>
+                <br>
+                <div class="msg">{{msg}}</div>
             </form>
             <p class="bottom">Don't have an account?  <a href="{{url_for('register')}}"> Sign Up here</a></p>
         </div>
