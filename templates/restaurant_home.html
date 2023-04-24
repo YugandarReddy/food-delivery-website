@@ -18,11 +18,16 @@
     <main>
         {%for menu in menus%}
         <div class="item">
-            <h2><strong>Name:</strong> {{menu["Name"]}}</h2>
-            <p><strong>Contents: </strong> {{menu["Description"]}}</p>
-            <p><strong>Price:</strong> {{menu["Price"]}}</p>
-            <p><strong>Preparation Time:</strong>{{menu["Preparation_Time"]}}</p>
-            <input type="submit" value="Remove">
+            <form method="POST">
+                <div class="form-row">
+                    <input type="hidden" id="MenuId" name="MenuId" value={{menu[0]}}>
+                </div>
+                <p><strong>Name:</strong> {{menu[2]}}</p>
+                <p><strong>Contents: </strong> {{menu[4]}}</p>
+                <p><strong>Price:</strong> {{menu[3]}}</p>
+                <p><strong>Preparation Time:</strong>{{menu[5]}}</p>
+                <input type="submit" name="action" value="Remove">
+            </form>
         </div>
         {% endfor %}
     </main>
@@ -47,9 +52,9 @@
                     <label for="preparation_time">Prep Time:</label>
                     <input type="text" id="preparation_time" name="preparation_time" required>
                 </div>
-                <input type="submit" value="Add">
+                <input type="submit" name="action" value="Add">
+            </form>
         </div>
     </div>
 </body>
-
 </html>
