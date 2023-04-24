@@ -15,7 +15,7 @@ MENU=[{"ItemID":1,"Name":"Biryani","Price":15,"Preparation_Time":20,"Description
 c.execute('''CREATE TABLE IF NOT EXISTS customers (CustomerId INTEGER PRIMARY KEY AUTOINCREMENT, CustomerName VARCHAR(100),Phone VARCHAR(10),Street VARCHAR(50),City VARHCAR(50),State VARCHAR(50),Pincode INTEGER,Email VARCHAR(50),Password VARCHAR(15))''')
 c.execute('''CREATE TABLE IF NOT EXISTS restaurants (RestaurantId INTEGER PRIMARY KEY AUTOINCREMENT, RestaurantName VARCHAR(100),Phone VARCHAR(10),Street VARCHAR(50),City VARHCAR(50),State VARCHAR(50),Pincode INTEGER,Email VARCHAR(50),Password VARCHAR(15))''')
 conn.commit()
-c.execute('''INSERT INTO customers VALUES (NULL,'Yugi','1234567890','2330 N','Wichita','Kansas',67220,'123@gmail.com','1234')''')
+c.execute('''CREATE TABLE IF NOT EXISTS menu(ItemId INTEGER PRIMARY KEY AUTOINCREMENT,RestaurantId INTEGER,Price INTEGER,PreparationTime INTEGER,FOREIGN KEY (RestaurantId) REFERENCES restaurants(RestaurantId))''')
 conn.commit()
 #Login Page
 @app.route("/")
@@ -28,16 +28,20 @@ def login():
         password = request.form['password']
         #Connect database to check for user
         if user_type == 'Customer':
-            c.execute("SELECT * FROM customers WHERE phone = ? AND password = ?", (phone, password))
+            username=c.execute("SELECT * FROM customers WHERE phone = ? AND password = ?", (phone, password))
+            return render_template('user_home.html')
         elif user_type == 'Restaurant':            
-            c.execute("SELECT * FROM restaurants WHERE phone = ? AND password = ?", (phone, password))
+            c.execute("SELECT RestaurantName FROM restaurants WHERE phone = ? AND password = ?", (phone, password))
+            username=c.fetchone()
+            return render_template('restaurant_home.html',restaurant=username[0],menus=MENU)
         else:
             return render_template('login.html',"Incorrect User Type")
         account = c.fetchone()
         conn.commit()
         if account:
             session['loggedin'] = True
-            return render_template('restaurant_list.html',restaurants=RESTAURANT)
+
+            return render_template('user_home.html',restaurants=RESTAURANT)
         else:
             return render_template('login.html',msg= "Incorrect Phone Number/Password")
     return render_template('login.html')
@@ -67,13 +71,23 @@ def register():
         return render_template('login.html')
     return render_template('register.html')
 
-#Home Page
-@app.route('/restaurant_list',methods=['GET','POST'])
-def restaurant_list():
-    if request.method=='POST' :
-         return render_template('login.html')   
-    return render_template('restaurant_list.html',restaurants=RESTAURANT)
+#User Home Page
+@app.route('/user_home',methods=['GET','POST'])
+def user_home():
+    if request.method == 'POST' :
+        return render_template('login.html')   
+    return render_template('user_home.html',restaurants=RESTAURANT)
+#Restaurant Home Page
+@app.route('/restaurant_home',methods=['GET','POST'])
+def restaurant_home():
+    if request.method == 'POST':
+        pass
+    return render_template('restaurant_home.html')
 
+@app.route('/logout')
+def logout():
+    session.pop('logged_in', None)
+    return render_template('login.html')
 
 if __name__== '__main__':
     app.run(host='0.0.0.0',debug=True)
