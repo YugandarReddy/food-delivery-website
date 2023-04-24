@@ -1,131 +1,55 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 
 <head>
-  <title>Restaurant Home Page</title>
-  <style>
-    /* Styles for the header */
-    header {
-      background-color: green;
-      padding: 20px;
-      text-align: center;
-    }
-
-    h1 {
-      font-size: 36px;
-      margin: 0;
-    }
-
-    /* Styles for the main content */
-    main {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      padding: 20px;
-    }
-    .item {
-      background-color: #f7f7f7;
-      border: 1px solid #ccc;
-      border-radius: 5px;
-      box-shadow: 2px 2px 5px #ccc;
-      margin: 10px;
-      padding: 10px;
-      width: 300px;
-    }
-
-    .item h2 {
-      text-align: center;
-      font-size: 16 px;
-      margin: 0;
-    }
-
-    .item p {
-      text-align: center;
-      font-size: 18px;
-      margin: 0;
-    }
-
-    input[type="submit"] {
-      background-color: green;
-      color: #fff;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-      width: 100%;
-      font-size: 18px;
-      padding: 10px 20px;
-      transition: background-color 0.3s;
-    }
-
-    input[type="submit"]:hover {
-      background-color: crimson;
-    }
-
-    .btn {
-      padding: 20 px 20px;
-      color: white;
-      float: right;
-      text-align: center;
-      border-radius: 20px;
-      font-size: 18px;
-    }
-
-    a:link {
-      text-decoration: none;
-    }
-    .form-row {
-            display: flex;
-            flex-wrap: wrap;
-            margin-bottom: 20px;
-        }
-    .form-row label {
-            flex: 1;
-            margin-right: 20px;
-        }
-    .form-row input[type="text"]{
-            flex: 2;
-        }
-  </style>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static',filename='styles.css')}}">
+    <title>Restaurant Home Page</title>
 </head>
 
 <body>
-  <header>
-    <h1>Food Delivery Website</h1>
-    <a href="{{ url_for ('logout') }}" class="btn">Logout</a>
-  </header>
-  <main>
+    <header>
+        <h1>Food Delivery Website</h1>
+        <a href="{{ url_for ('logout') }}" class="btn">Logout</a>
+    </header>
     <h2>{{ restaurant }} Menu</h2>
-    {%for menu in menus%}
-    <div class="item">
-      <h2>{{menu["Name"]}}</h2>
-      <p>{{menu["Contents"]}}</p>
-      <p>{{menu["Price"]}}</p>
-      <p>{{menu["Preparation Time"]}}</p>
-      <input type="submit" value="Remove">
+    <main>
+        {%for menu in menus%}
+        <div class="item">
+            <h2><strong>Name:</strong> {{menu["Name"]}}</h2>
+            <p><strong>Contents: </strong> {{menu["Description"]}}</p>
+            <p><strong>Price:</strong> {{menu["Price"]}}</p>
+            <p><strong>Preparation Time:</strong>{{menu["Preparation_Time"]}}</p>
+            <input type="submit" value="Remove">
+        </div>
+        {% endfor %}
+    </main>
+    <div class="container">
+        <div class="form">
+            <h3>Add Item</h3>
+            <br>
+            <form method="POST">
+                <div class="form-row">
+                    <label for="name">Name:</label>
+                    <input type="text" id="name" name="name" required>
+                </div>
+                <div class="form-row">
+                    <label for="contents">Contents:</label>
+                    <input type="text" id="contents" name="contents" required>
+                </div>
+                <div class="form-row">
+                    <label for="price">Price:</label>
+                    <input type="text" id="price" name="price" required>
+                </div>
+                <div class="form-row">
+                    <label for="preparation_time">Prep Time:</label>
+                    <input type="text" id="preparation_time" name="preparation_time" required>
+                </div>
+                <input type="submit" value="Add">
+        </div>
     </div>
-    {% endfor %}
-    <div class="add_item">
-        <h3>Add Item</h3>
-        <br>
-        <form method="POST">
-            <div class="form-row">
-                <label for="name">Name:</label>
-                <input type="text" id="name" name="name" required>
-            </div>
-            <div class="form-row">
-                <label for="contents">Contents:</label>
-                <input type="text" id="contents" name="contents" required>
-            </div>
-            <div class="form-row">
-                <label for="price">Price:</label>
-                <input type="text" id="price" name="price" required>
-            </div>
-            <div class="form-row">
-                <label for="preparation_time">Prep Time:</label>
-                <input type="text" id="preparation_time" name="preparation_time" required>
-            </div>
-            <input type="submit" value="Add">
-    </div>
-  </main>
 </body>
+
 </html>

@@ -29,7 +29,7 @@ def login():
         #Connect database to check for user
         if user_type == 'Customer':
             username=c.execute("SELECT * FROM customers WHERE phone = ? AND password = ?", (phone, password))
-            return render_template('user_home.html')
+            return render_template('user_home.html',restaurants=RESTAURANT)
         elif user_type == 'Restaurant':            
             c.execute("SELECT RestaurantName FROM restaurants WHERE phone = ? AND password = ?", (phone, password))
             username=c.fetchone()
@@ -74,8 +74,6 @@ def register():
 #User Home Page
 @app.route('/user_home',methods=['GET','POST'])
 def user_home():
-    if request.method == 'POST' :
-        return render_template('login.html')   
     return render_template('user_home.html',restaurants=RESTAURANT)
 #Restaurant Home Page
 @app.route('/restaurant_home',methods=['GET','POST'])
