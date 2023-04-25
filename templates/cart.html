@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static',filename='styles.css')}}">
+    <title>Cart</title>
+</head>
+<body>
+    <header>
+        <h1>{{restaurant}} Cart</h1>    
+        <div>
+            <form method="POST">
+              <div style="height : 10%; width: 10%; float:right;">
+                <input type="submit" name="action" value="logout">
+              </div>
+            </form>
+          </div>
+    </header>
+    <main>
+        <form method="POST">
+        <table>
+            <tr>
+              <th>Item Number</th>
+              <th>Item Name</th>
+              <th>Price</th>
+            </tr>
+        {%for item in items%}
+        <tr>
+            <td>{{item[0]}}</td>
+            <td>{{item[4]}}</td>
+            <td>{{item[5]}}</td>
+          </tr>
+          {% endfor %}
+          <tr>
+            <td></td>
+            <td><strong>Tax</strong></td>
+            <td>{{tax}}</td>
+          </tr>
+          <tr>
+            <td></td>
+            <td><strong>Total</strong></td>
+            <td>{{total}}</td>
+          </tr>
+          </table>
+                <input type="submit" name="action" value="Place Order">
+      </form>
+    </main>
+</body>
+</html>

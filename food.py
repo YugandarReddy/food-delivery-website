@@ -12,6 +12,8 @@ c.execute('''CREATE TABLE IF NOT EXISTS restaurants (RestaurantId INTEGER PRIMAR
 conn.commit()
 c.execute('''CREATE TABLE IF NOT EXISTS items(ItemId INTEGER PRIMARY KEY AUTOINCREMENT,RestaurantId INTEGER,ItemName VARCHAR(100),Price INTEGER,Contents VARCHAR(200),PreparationTime INTEGER,FOREIGN KEY (RestaurantId) REFERENCES restaurants(RestaurantId))''')
 conn.commit()
+c.execute('''CREATE TABLE IF NOT EXISTS carts (CartId INTEGER PRIMARY KEY AUTOINCREMENT,CustomerId INTEGER,RestaurantId INTEGER,ItemId INTEGER,ItemName VARCHAR(100),Price INTEGER,FOREIGN KEY (CustomerId) REFERENCES customers(CustomerId),FOREIGN KEY (RestaurantId) REFERENCES restaurants(RestaurantId),FOREIGN KEY (ItemId) REFERENCES items(ItemId))''')
+conn.commit()
 
 #Login Page
 @app.route('/',methods=['POST','GET'])
@@ -88,12 +90,14 @@ def user_home():
     c.execute("SELECT * FROM restaurants")
     conn.commit()
     restaurants=c.fetchall()
-    if request.method == 'POST':
+    if request.method == 'POST'and request.form['action']=='Order':
         RestId=request.form['RestId'] 
         RestName=request.form['RestName']
         session['RestId']=RestId
         session['RestName']=RestName
         return redirect('/menu')
+    elif request.method == 'POST'and request.form['action']=='logout':
+        return redirect('/logout')
     return render_template('user_home.html',profile=user[1],restaurants=restaurants)
 
 #Restaurant Home Page
@@ -122,19 +126,51 @@ def restaurant_home():
             return redirect('/restaurant_home')
         except: 'There was an issue removing your item'
         return redirect('/restaurant_home')
+    elif request.method == 'POST'and request.form['action']=='logout':
+        return redirect('/logout')
     return render_template('restaurant_home.html',restaurant=session['username'],menus=menus)
 
-@app.route('/menu')
+@app.route('/menu',methods=['POST','GET'])
 def menu():
     RestId=session['RestId']
     RestName=session['RestName']
+    UserId=session['UserId']
     c.execute("SELECT * FROM items WHERE RestaurantId=?",(RestId,))
     conn.commit()
     items=c.fetchall()
+    if request.method == 'POST' and request.form['action'] == 'Add to Cart':
+        ItemId=request.form['ItemId']
+        ItemName=request.form['ItemName']
+        c.execute("SELECT Price from items where ItemId=?",(ItemId,))
+        conn.commit()
+        Price=c.fetchone()
+        c.execute("INSERT INTO carts VALUES(NULL,?,?,?,?,?)",(UserId,RestId,ItemId,ItemName,Price[0]))
+        conn.commit()
+        return redirect('/menu')
+    if request.method == 'POST' and request.form['action'] == 'Go to Cart':
+        return redirect('/cart')
     return render_template('menu.html',restaurant=RestName,items=items)
+#cart route
+@app.route('/cart',methods=['POST','GET'])
+def cart():
+    c.execute("SELECT * FROM carts")
+    conn.commit()
+    cartItems=c.fetchall()
+    c.execute("SELECT SUM(Price) FROM carts")
+    conn.commit()
+    tax=0.05
+    total=c.fetchone()
+    Ordertotal=total[0]
+    tax=round(Ordertotal*0.05,3)
+    Ordertotal=Ordertotal+tax
+    if request.method == 'POST' and request.form['action']=='logout':
+        return redirect('logout')
+    elif request.method == 'POST' and request.form['action']=='place Order':
+        pass
+    return render_template('cart.html',items=cartItems,restaurant=session['RestName'],total=Ordertotal,tax=tax)
 #logout route
 @app.route('/logout',methods=['POST','GET'])
-def logout():
+def logout(): 
     session.pop('logged_in', None)
     return render_template('login.html')
 
