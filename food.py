@@ -1,4 +1,5 @@
 from flask import Flask,render_template,request, redirect, url_for,session
+from datetime import datetime
 import sqlite3
 
 app=Flask(__name__)
@@ -13,6 +14,8 @@ conn.commit()
 c.execute('''CREATE TABLE IF NOT EXISTS items(ItemId INTEGER PRIMARY KEY AUTOINCREMENT,RestaurantId INTEGER,ItemName VARCHAR(100),Price INTEGER,Contents VARCHAR(200),PreparationTime INTEGER,FOREIGN KEY (RestaurantId) REFERENCES restaurants(RestaurantId))''')
 conn.commit()
 c.execute('''CREATE TABLE IF NOT EXISTS carts (CartId INTEGER PRIMARY KEY AUTOINCREMENT,CustomerId INTEGER,RestaurantId INTEGER,ItemId INTEGER,ItemName VARCHAR(100),Price INTEGER,FOREIGN KEY (CustomerId) REFERENCES customers(CustomerId),FOREIGN KEY (RestaurantId) REFERENCES restaurants(RestaurantId),FOREIGN KEY (ItemId) REFERENCES items(ItemId))''')
+conn.commit()
+c.execute('''CREATE TABLE IF NOT EXISTS orders (OrderId INTEGER PRIMARY KEY AUTOINCREMENT,CustomerId INTEGER,RestaurantId INTEGER,Tax INTEGER,Total INTEGER,DateCreated DATE,FOREIGN KEY (CustomerId) REFERENCES customers(CustomerId),FOREIGN KEY (RestaurantId) REFERENCES restaurants(RestaurantId))''')
 conn.commit()
 
 #Login Page
@@ -130,6 +133,7 @@ def restaurant_home():
         return redirect('/logout')
     return render_template('restaurant_home.html',restaurant=session['username'],menus=menus)
 
+#Route for Menu
 @app.route('/menu',methods=['POST','GET'])
 def menu():
     RestId=session['RestId']
@@ -137,10 +141,11 @@ def menu():
     UserId=session['UserId']
     c.execute("SELECT * FROM items WHERE RestaurantId=?",(RestId,))
     conn.commit()
-    items=c.fetchall()
+    items=c.fetchall()  
     if request.method == 'POST' and request.form['action'] == 'Add to Cart':
         ItemId=request.form['ItemId']
         ItemName=request.form['ItemName']
+        print(ItemId,ItemName)
         c.execute("SELECT Price from items where ItemId=?",(ItemId,))
         conn.commit()
         Price=c.fetchone()
@@ -153,7 +158,7 @@ def menu():
 #cart route
 @app.route('/cart',methods=['POST','GET'])
 def cart():
-    c.execute("SELECT * FROM carts")
+    c.execute("SELECT ROW_NUMBER() OVER(ORDER BY ItemId),ItemName,Price FROM carts")
     conn.commit()
     cartItems=c.fetchall()
     c.execute("SELECT SUM(Price) FROM carts")
@@ -161,16 +166,46 @@ def cart():
     tax=0.05
     total=c.fetchone()
     Ordertotal=total[0]
-    tax=round(Ordertotal*0.05,3)
+    print(Ordertotal)
+
+    if Ordertotal is None:
+        Ordertotal=0
+        tax=0
+    else:
+        tax=round(Ordertotal*0.05,3)
     Ordertotal=Ordertotal+tax
+
     if request.method == 'POST' and request.form['action']=='logout':
         return redirect('logout')
-    elif request.method == 'POST' and request.form['action']=='place Order':
-        pass
+    elif request.method == 'POST' and request.form['action']=='Place Order':
+        c.execute("SELECT TOTAL(Price) FROM carts")
+        Total=c.fetchone()
+        conn.commit()
+        Tax=Total[0]*0.05
+        OrderTotal=Total[0]+Tax
+        c.execute("SELECT DISTINCT CustomerId,RestaurantId FROM carts")
+        OrderDetails=c.fetchall()
+        conn.commit()
+        date_created = datetime.now()
+        c.execute("INSERT INTO orders VALUES(NULL,?,?,?,?,?)",(OrderDetails[0][0],OrderDetails[0][1],Tax,OrderTotal,date_created))
+        conn.commit()
+        return redirect('/order_placed')
     return render_template('cart.html',items=cartItems,restaurant=session['RestName'],total=Ordertotal,tax=tax)
+
+#Place Order Route
+@app.route('/order_placed',methods=['POST','GET'])
+def order_placed():
+    if request.method == 'POST' and request.form['action'] == 'logout':
+        return redirect('/logout')
+    c.execute("SELECT OrderId FROM orders ORDER BY DateCreated DESC LIMIT 1")
+    conn.commit()
+    OrderId=c.fetchall()
+    return render_template("order_placed.html",OrderId=OrderId[0][0])
 #logout route
 @app.route('/logout',methods=['POST','GET'])
-def logout(): 
+def logout():
+    c.execute('DELETE FROM carts')
+    conn.commit()
     session.pop('logged_in', None)
     return render_template('login.html')
 

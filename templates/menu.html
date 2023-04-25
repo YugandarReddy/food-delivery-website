@@ -34,17 +34,15 @@
         </div>
         <h2>{{item[2]}}</h2>
         <div class="form-row">
-          <input type="hidden" id="ItemName" name="ItemName" value={{item[2]}}>
+          <input type="hidden" id="ItemName" name="ItemName" value="{{item[2]}}">
         </div>
         <p>Description: {{item[4]}}</p>
         <p><strong>Price:</strong> {{item[3]}}</p>
         <p><strong>preparation Time:</strong> {{item[5]}}</p>
         <input type="submit" name="action" value="Add to Cart">
+      </form>
     </div>
     {% endfor %}
-    </form>
-    </div>
   </main>
 </body>
-
 </html>
