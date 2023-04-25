@@ -4,43 +4,58 @@ import sqlite3
 
 app=Flask(__name__)
 app.secret_key='123456789'
-conn = sqlite3.connect('food.db',check_same_thread=False)
+conn = sqlite3.connect('website_data.db',check_same_thread=False)
 c = conn.cursor()
 
 #Create Database Tables if they do not exist
 #Create customers Table
-c.execute('''CREATE TABLE IF NOT EXISTS customers (CustomerId INTEGER PRIMARY KEY AUTOINCREMENT, CustomerName VARCHAR(100),Phone VARCHAR(10),Street VARCHAR(50),City VARHCAR(50),State VARCHAR(50),Pincode INTEGER,Email VARCHAR(50),Password VARCHAR(15))''')
+c.execute('''CREATE TABLE IF NOT EXISTS Customers (CustomerId INTEGER PRIMARY KEY AUTOINCREMENT, CustomerName VARCHAR(100),Phone VARCHAR(10),Street VARCHAR(50),City VARHCAR(50),State VARCHAR(50),Pincode INTEGER,Email VARCHAR(50),Password VARCHAR(15))''')
+
 #Create retaurants table
-c.execute('''CREATE TABLE IF NOT EXISTS restaurants (RestaurantId INTEGER PRIMARY KEY AUTOINCREMENT, RestaurantName VARCHAR(100),Phone VARCHAR(10),Street VARCHAR(50),City VARHCAR(50),State VARCHAR(50),Pincode INTEGER,Email VARCHAR(50),Password VARCHAR(15),DeliveryFee INTEGER NOT NULL)''')
+c.execute('''CREATE TABLE IF NOT EXISTS Restaurants (RestaurantId INTEGER PRIMARY KEY AUTOINCREMENT, RestaurantName VARCHAR(100),Phone VARCHAR(10),Street VARCHAR(50),City VARHCAR(50),State VARCHAR(50),Pincode INTEGER,Email VARCHAR(50),Password VARCHAR(15),DeliveryFee INTEGER)''')
 conn.commit()
+
 #Create items table
-c.execute('''CREATE TABLE IF NOT EXISTS items(ItemId INTEGER PRIMARY KEY AUTOINCREMENT,RestaurantId INTEGER,ItemName VARCHAR(100),Price INTEGER,Contents VARCHAR(200),PreparationTime INTEGER,FOREIGN KEY (RestaurantId) REFERENCES restaurants(RestaurantId))''')
+c.execute('''CREATE TABLE IF NOT EXISTS Items(ItemId INTEGER PRIMARY KEY AUTOINCREMENT,RestaurantId INTEGER,ItemName VARCHAR(100),Price INTEGER,Contents VARCHAR(200),PreparationTime INTEGER,FOREIGN KEY (RestaurantId) REFERENCES restaurants(RestaurantId))''')
 conn.commit()
-#Create carts table
-c.execute('''CREATE TABLE IF NOT EXISTS carts (CartId INTEGER PRIMARY KEY AUTOINCREMENT,CustomerId INTEGER,RestaurantId INTEGER,ItemId INTEGER,ItemName VARCHAR(100),Price INTEGER,FOREIGN KEY (CustomerId) REFERENCES customers(CustomerId),FOREIGN KEY (RestaurantId) REFERENCES restaurants(RestaurantId),FOREIGN KEY (ItemId) REFERENCES items(ItemId))''')
-conn.commit()
+
 #Create orders table
-c.execute('''CREATE TABLE IF NOT EXISTS orders (OrderId INTEGER PRIMARY KEY AUTOINCREMENT,CustomerId INTEGER,RestaurantId INTEGER,Tax INTEGER,Total INTEGER,DateCreated DATE,FOREIGN KEY (CustomerId) REFERENCES customers(CustomerId),FOREIGN KEY (RestaurantId) REFERENCES restaurants(RestaurantId))''')
+c.execute('''
+CREATE TABLE IF NOT EXISTS Orders(OrderId INTEGER PRIMARY KEY AUTOINCREMENT,CustomerId INTEGER,RestaurantId INTEGER,OrderDate DATE,Tax INTEGER,Total INTEGER,FOREIGN KEY (CustomerId) REFERENCES Customers(CustomerId),FOREIGN KEY (RestaurantId) REFERENCES Restaurants(RestaurantId))''')
+conn.commit()
+
+#Create Order Details table
+c.execute('''CREATE TABLE IF NOT EXISTS OrderDetails(OrderDetailsID INTEGER PRIMARY KEY AUTOINCREMENT,OrderId INTEGER,ItemId INTEGER,FOREIGN KEY (OrderId) REFERENCES Orders(OrderId),FOREIGN KEY (ItemId) REFERENCES Items(ItemId))''')
+conn.commit()
+
+#Create carts table
+c.execute('''CREATE TABLE IF NOT EXISTS Cart(CartId INTEGER PRIMARY KEY AUTOINCREMENT,ItemId INTEGER,FOREIGN KEY (ItemId) REFERENCES Items(ItemId))''')
 conn.commit()
 
 #SQL Commands
-CUSTOMER_INFO="SELECT * FROM customers WHERE phone = ? AND password = ?"
-RESTAURANT_INFO="SELECT * FROM restaurants WHERE phone = ? AND password = ?"
-REGISTER_CUSTOMER_ENTRY="INSERT INTO customers VALUES (NULL,?,?,?,?,?,?,?,?)"
-REGISTER_RESTAURANT_ENTRY="INSERT INTO restaurants VALUES (NULL,?,?,?,?,?,?,?,?,?)"
-CUSTOMER_DETAILS_BY_CUSTID="SELECT * FROM customers WHERE CustomerId=?"
-RESTAURANT_DETAILS_BY_RESTID="SELECT * FROM items WHERE RestaurantId=?"
-ADD_MENU_ITEM="INSERT INTO items VALUES(NULL,?,?,?,?,?)"
-DELETE_MENU_ITEM="DELETE FROM items where ItemId=?"
-GET_ITEMS_BY_RESTID="SELECT * FROM items WHERE RestaurantId=?"
-GET_ITEMS_BY_ITEMID="SELECT Price from items where ItemId=?"
-ADD_ITEMS_TO_CART="INSERT INTO carts VALUES(NULL,?,?,?,?,?)"
-DISPLAY_CART_ITEMS="SELECT ROW_NUMBER() OVER(ORDER BY ItemId),ItemName,Price FROM carts"
-CART_TOTAL="SELECT SUM(Price) FROM carts"
-GET_CUSTID_RESTID_FROM_CART="SELECT DISTINCT CustomerId,RestaurantId FROM carts"
-ADD_DETAILS_TO_ORDER="INSERT INTO orders VALUES(NULL,?,?,?,?,?)"
-GET_LATEST_ORDER="SELECT OrderId,Total FROM orders ORDER BY DateCreated DESC LIMIT 1"
-DELETE_CART_ITEMS="DELETE FROM carts"
+CUSTOMER_INFO="SELECT * FROM Customers WHERE Phone = ? AND Password = ?"
+RESTAURANT_INFO="SELECT * FROM Restaurants WHERE Phone = ? AND Password = ?"
+REGISTER_CUSTOMER_ENTRY="INSERT INTO Customers VALUES (NULL,?,?,?,?,?,?,?,?)"
+REGISTER_RESTAURANT_ENTRY="INSERT INTO Restaurants VALUES (NULL,?,?,?,?,?,?,?,?,?)"
+CUSTOMER_DETAILS_BY_CUSTID="SELECT * FROM Customers WHERE CustomerId=?"
+RESTAURANT_DETAILS_BY_RESTID="SELECT * FROM Items WHERE RestaurantId=?"
+ADD_MENU_ITEM="INSERT INTO Items VALUES(NULL,?,?,?,?,?)"
+DELETE_MENU_ITEM="DELETE FROM Items where ItemId=?"
+GET_REST_NAME="SELECT RestaurantName FROM Resaurants WHERE RestaurantId=?"
+GET_CUST_NAME="SELECT CustomerName FROM Customers WHERE CustomerId=?"
+
+GET_ITEMS_BY_RESTID="SELECT * FROM Items WHERE RestaurantId=?"
+GET_ITEMS_BY_ITEMID="SELECT Price from Items where ItemId=?"
+ADD_ITEMS_TO_CART="INSERT INTO Cart VALUES(NULL,?)"
+DISPLAY_CART_ITEMS="SELECT ROW_NUMBER() OVER(ORDER BY Items.ItemId),Items.ItemName, Items.Price FROM Items INNER JOIN Cart ON Items.ItemId = Cart.ItemId"
+CART_TOTAL="SELECT SUM(Items.Price) FROM Items INNER JOIN Cart ON Items.ItemId = Cart.ItemId"
+GET_CART_ITEMID ="SELECT ItemId FROM Cart"
+ADD_TO_ORDER="INSERT INTO Orders VALUES(NULL,?,?,?,?,?)"
+ADD_TO_ORDER_DETAILS="INSERT INTO OrderDetails VALUES(NULL,?,?)"
+GET_LATEST_ORDER="SELECT OrderId, Total,OrderDate FROM Orders ORDER BY OrderDate DESC LIMIT 1"
+DELETE_CART_ITEMS="DELETE FROM Cart"
+VIEW_CUSTOMER_ORDERS="SELECT Orders.OrderId, Customers.CustomerName,Customers.Phone,Orders.Total FROM Orders INNER JOIN CUSTOMERS ON Orders.CustomerId = Customers.CustomerId WHERE RestaurantId=?"
+VIEW_RESTAURANT_ORDERS="SELECT Orders.OrderId, Restaurants.RestaurantName, Restaurants.Phone, Orders.Total FROM Orders INNER JOIN Restaurants ON Orders.RestaurantId = Restaurants.RestaurantId WHERE Orders.CustomerId =?"
 #Login Page
 @app.route('/',methods=['POST','GET'])
 @app.route('/login',methods=['POST','GET'])
@@ -122,6 +137,8 @@ def user_home():
         session['RestId']=RestId
         session['RestName']=RestName
         return redirect('/menu')
+    elif request.method == 'POST' and request.form['action'] == 'View Orders':
+        return redirect('/customer_view_orders')
     elif request.method == 'POST'and request.form['action']=='logout':
         return redirect('/logout')
     return render_template('user_home.html',profile=user[1],restaurants=restaurants)
@@ -152,6 +169,8 @@ def restaurant_home():
             return redirect('/restaurant_home')
         except: 'There was an issue removing your item'
         return redirect('/restaurant_home')
+    elif request.method == 'POST' and request.form['action'] == 'View Orders':
+        return redirect('/restaurant_view_orders')
     elif request.method == 'POST'and request.form['action']=='logout':
         return redirect('/logout')
     return render_template('restaurant_home.html',restaurant=session['username'],menus=menus)
@@ -167,16 +186,14 @@ def menu():
     items=c.fetchall()  
     if request.method == 'POST' and request.form['action'] == 'Add to Cart':
         ItemId=request.form['ItemId']
-        ItemName=request.form['ItemName']
-        print(ItemId,ItemName)
-        c.execute(GET_ITEMS_BY_ITEMID,(ItemId,))
-        conn.commit()
         Price=c.fetchone()
-        c.execute(ADD_ITEMS_TO_CART,(UserId,RestId,ItemId,ItemName,Price[0]))
+        c.execute(ADD_ITEMS_TO_CART,(ItemId,))
         conn.commit()
         return redirect('/menu')
-    if request.method == 'POST' and request.form['action'] == 'Go to Cart':
+    elif request.method == 'POST' and request.form['action'] == 'Go to Cart':
         return redirect('/cart')
+    elif request.method == 'POST' and request.form['action'] == 'View Orders':
+        return redirect('/customer_view_orders')
     return render_template('menu.html',restaurant=RestName,items=items)
 #cart route
 @app.route('/cart',methods=['POST','GET'])
@@ -189,14 +206,12 @@ def cart():
     tax=0.05
     total=c.fetchone()
     Ordertotal=total[0]
-    print(Ordertotal)
-
     if Ordertotal is None:
         Ordertotal=0
         tax=0
     else:
         tax=round(Ordertotal*0.05,3)
-    Ordertotal=Ordertotal+tax
+    Ordertotal=round(Ordertotal+tax,3)
 
     if request.method == 'POST' and request.form['action']=='logout':
         return redirect('logout')
@@ -205,25 +220,58 @@ def cart():
         Total=c.fetchone()
         conn.commit()
         Tax=Total[0]*0.05
-        OrderTotal=Total[0]+Tax
-        c.execute(GET_CUSTID_RESTID_FROM_CART)
-        OrderDetails=c.fetchall()
+        OrderTotal=round(Total[0]+Tax,3)
+        date_created = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        c.execute(ADD_TO_ORDER,(session['UserId'],session['RestId'],date_created,Tax,OrderTotal,))
         conn.commit()
-        date_created = datetime.now()
-        c.execute(ADD_DETAILS_TO_ORDER,(OrderDetails[0][0],OrderDetails[0][1],Tax,OrderTotal,date_created))
+        c.execute(GET_LATEST_ORDER)
         conn.commit()
+        OrderId=c.fetchone()
+        c.execute(GET_CART_ITEMID)
+        conn.commit()
+        ItemIds=c.fetchall()
+        for ItemId in ItemIds:
+            c.execute(ADD_TO_ORDER_DETAILS,(OrderId[0],ItemId[0]))
+            conn.commit()
         return redirect('/order_placed')
     return render_template('cart.html',items=cartItems,restaurant=session['RestName'],total=Ordertotal,tax=tax)
 
 #Place Order Route
 @app.route('/order_placed',methods=['POST','GET'])
 def order_placed():
+    c.execute(DELETE_CART_ITEMS)
+    conn.commit()
     if request.method == 'POST' and request.form['action'] == 'logout':
         return redirect('/logout')
     c.execute(GET_LATEST_ORDER)
     conn.commit()
     OrderInfo=c.fetchall()
-    return render_template("order_placed.html",OrderId=OrderInfo[0][0],total=OrderInfo[0][1])
+    print(OrderInfo)
+    return render_template("order_placed.html",OrderId=OrderInfo[0][0],total=OrderInfo[0][1],OrderDate=OrderInfo[0][2])
+
+#Restaurant View Orders Route
+@app.route('/restaurant_view_orders',methods=['POST','GET'])
+def restaurant_view_orders():
+    c.execute(VIEW_CUSTOMER_ORDERS,(session['RestId'],))
+    conn.commit()
+    orders=c.fetchall()
+    if request.method == 'POST' and request.form['action']=='logout':
+        return redirect("/logout")
+    return render_template("/view_orders.html",profile=session['RestName'],orders=orders)
+
+#Customer View Orders Route
+@app.route('/customer_view_orders',methods=['POST','GET'])
+def customer_view_orders():
+    c.execute(VIEW_RESTAURANT_ORDERS,(session['UserId'],))
+    conn.commit()
+    orders=c.fetchall()
+    c.execute(GET_CUST_NAME,(session['UserId'],))
+    conn.commit()
+    CustName=c.fetchone()
+    if request.method == 'POST' and request.form['action']=='logout':
+        return redirect("/logout")
+    return render_template("view_orders.html",profile=CustName[0],orders=orders)
+
 #logout route
 @app.route('/logout',methods=['POST','GET'])
 def logout():
