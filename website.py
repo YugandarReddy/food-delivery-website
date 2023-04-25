@@ -23,6 +23,24 @@ conn.commit()
 c.execute('''CREATE TABLE IF NOT EXISTS orders (OrderId INTEGER PRIMARY KEY AUTOINCREMENT,CustomerId INTEGER,RestaurantId INTEGER,Tax INTEGER,Total INTEGER,DateCreated DATE,FOREIGN KEY (CustomerId) REFERENCES customers(CustomerId),FOREIGN KEY (RestaurantId) REFERENCES restaurants(RestaurantId))''')
 conn.commit()
 
+#SQL Commands
+CUSTOMER_INFO="SELECT * FROM customers WHERE phone = ? AND password = ?"
+RESTAURANT_INFO="SELECT * FROM restaurants WHERE phone = ? AND password = ?"
+REGISTER_CUSTOMER_ENTRY="INSERT INTO customers VALUES (NULL,?,?,?,?,?,?,?,?)"
+REGISTER_RESTAURANT_ENTRY="INSERT INTO restaurants VALUES (NULL,?,?,?,?,?,?,?,?,?)"
+CUSTOMER_DETAILS_BY_CUSTID="SELECT * FROM customers WHERE CustomerId=?"
+RESTAURANT_DETAILS_BY_RESTID="SELECT * FROM items WHERE RestaurantId=?"
+ADD_MENU_ITEM="INSERT INTO items VALUES(NULL,?,?,?,?,?)"
+DELETE_MENU_ITEM="DELETE FROM items where ItemId=?"
+GET_ITEMS_BY_RESTID="SELECT * FROM items WHERE RestaurantId=?"
+GET_ITEMS_BY_ITEMID="SELECT Price from items where ItemId=?"
+ADD_ITEMS_TO_CART="INSERT INTO carts VALUES(NULL,?,?,?,?,?)"
+DISPLAY_CART_ITEMS="SELECT ROW_NUMBER() OVER(ORDER BY ItemId),ItemName,Price FROM carts"
+CART_TOTAL="SELECT SUM(Price) FROM carts"
+GET_CUSTID_RESTID_FROM_CART="SELECT DISTINCT CustomerId,RestaurantId FROM carts"
+ADD_DETAILS_TO_ORDER="INSERT INTO orders VALUES(NULL,?,?,?,?,?)"
+GET_LATEST_ORDER="SELECT OrderId,Total FROM orders ORDER BY DateCreated DESC LIMIT 1"
+DELETE_CART_ITEMS="DELETE FROM carts"
 #Login Page
 @app.route('/',methods=['POST','GET'])
 @app.route('/login',methods=['POST','GET'])
@@ -33,10 +51,10 @@ def login():
         user_type = request.form['user_type']
         #Get Customer Name if Customer is logging in
         if user_type == 'Customer':
-            c.execute("SELECT * FROM customers WHERE phone = ? AND password = ?", (phone, password))
+            c.execute(CUSTOMER_INFO, (phone, password))
         #Get Restaurant Name if Restaurant is logging in
         else:
-            c.execute("SELECT * FROM restaurants WHERE phone = ? AND password = ?", (phone, password))
+            c.execute(RESTAURANT_INFO, (phone, password))
         account=c.fetchone()
         conn.commit()
         if account:
@@ -74,11 +92,11 @@ def register():
         if password == confirm_password:
             #If user_type is customer add user info to customers table
             if user_type == 'Customer':
-                c.execute("INSERT INTO customers VALUES (NULL,?,?,?,?,?,?,?,?)",(name,phone,street,city,state,pincode,email,password))
+                c.execute(REGISTER_CUSTOMER_ENTRY,(name,phone,street,city,state,pincode,email,password))
             #If user_type is Restaurant add info to restarurants table
             else:
                 if delivery_fee:
-                    c.execute("INSERT INTO restaurants VALUES (NULL,?,?,?,?,?,?,?,?,?)",(name,phone,street,city,state,pincode,email,password,delivery_fee))
+                    c.execute(REGISTER_RESTAURANT_ENTRY,(name,phone,street,city,state,pincode,email,password,delivery_fee))
                 else:
                     return render_template('register.html',msg="Delivery Fee is required")
         #If passwords do not match
@@ -92,7 +110,7 @@ def register():
 @app.route('/user_home',methods=['POST','GET'])
 def user_home():
     CustId=session['UserId']
-    c.execute("SELECT * FROM customers WHERE CustomerId=?",(CustId,))
+    c.execute(CUSTOMER_DETAILS_BY_CUSTID,(CustId,))
     conn.commit()
     user=c.fetchone()
     c.execute("SELECT * FROM restaurants")
@@ -112,7 +130,7 @@ def user_home():
 @app.route('/restaurant_home',methods=['POST','GET'])
 def restaurant_home():
     RestId=session['RestId']
-    c.execute("SELECT * FROM items WHERE RestaurantId=?",(RestId,))
+    c.execute(RESTAURANT_DETAILS_BY_RESTID,(RestId,))
     conn.commit()
     menus=c.fetchall()
     if request.method == 'POST' and request.form['action'] == 'Add':
@@ -121,7 +139,7 @@ def restaurant_home():
         ItemPrice=request.form['price']
         PrepTime=request.form['preparation_time']
         try:
-            c.execute("INSERT INTO items VALUES(NULL,?,?,?,?,?)",(RestId,ItemName,ItemPrice,ItemContents,PrepTime))
+            c.execute(ADD_MENU_ITEM,(RestId,ItemName,ItemPrice,ItemContents,PrepTime))
             conn.commit()
             return redirect('/restaurant_home')
         except: 'There was an issue adding your item'
@@ -129,7 +147,7 @@ def restaurant_home():
     elif request.method == 'POST' and request.form['action'] == 'Remove':
         itemId = request.form['MenuId']
         try:
-            c.execute('DELETE FROM items where ItemId=?',itemId)
+            c.execute(DELETE_MENU_ITEM,itemId)
             conn.commit()
             return redirect('/restaurant_home')
         except: 'There was an issue removing your item'
@@ -144,17 +162,17 @@ def menu():
     RestId=session['RestId']
     RestName=session['RestName']
     UserId=session['UserId']
-    c.execute("SELECT * FROM items WHERE RestaurantId=?",(RestId,))
+    c.execute(GET_ITEMS_BY_RESTID,(RestId,))
     conn.commit()
     items=c.fetchall()  
     if request.method == 'POST' and request.form['action'] == 'Add to Cart':
         ItemId=request.form['ItemId']
         ItemName=request.form['ItemName']
         print(ItemId,ItemName)
-        c.execute("SELECT Price from items where ItemId=?",(ItemId,))
+        c.execute(GET_ITEMS_BY_ITEMID,(ItemId,))
         conn.commit()
         Price=c.fetchone()
-        c.execute("INSERT INTO carts VALUES(NULL,?,?,?,?,?)",(UserId,RestId,ItemId,ItemName,Price[0]))
+        c.execute(ADD_ITEMS_TO_CART,(UserId,RestId,ItemId,ItemName,Price[0]))
         conn.commit()
         return redirect('/menu')
     if request.method == 'POST' and request.form['action'] == 'Go to Cart':
@@ -163,10 +181,10 @@ def menu():
 #cart route
 @app.route('/cart',methods=['POST','GET'])
 def cart():
-    c.execute("SELECT ROW_NUMBER() OVER(ORDER BY ItemId),ItemName,Price FROM carts")
+    c.execute(DISPLAY_CART_ITEMS)
     conn.commit()
     cartItems=c.fetchall()
-    c.execute("SELECT SUM(Price) FROM carts")
+    c.execute(CART_TOTAL)
     conn.commit()
     tax=0.05
     total=c.fetchone()
@@ -183,16 +201,16 @@ def cart():
     if request.method == 'POST' and request.form['action']=='logout':
         return redirect('logout')
     elif request.method == 'POST' and request.form['action']=='Place Order':
-        c.execute("SELECT TOTAL(Price) FROM carts")
+        c.execute(CART_TOTAL)
         Total=c.fetchone()
         conn.commit()
         Tax=Total[0]*0.05
         OrderTotal=Total[0]+Tax
-        c.execute("SELECT DISTINCT CustomerId,RestaurantId FROM carts")
+        c.execute(GET_CUSTID_RESTID_FROM_CART)
         OrderDetails=c.fetchall()
         conn.commit()
         date_created = datetime.now()
-        c.execute("INSERT INTO orders VALUES(NULL,?,?,?,?,?)",(OrderDetails[0][0],OrderDetails[0][1],Tax,OrderTotal,date_created))
+        c.execute(ADD_DETAILS_TO_ORDER,(OrderDetails[0][0],OrderDetails[0][1],Tax,OrderTotal,date_created))
         conn.commit()
         return redirect('/order_placed')
     return render_template('cart.html',items=cartItems,restaurant=session['RestName'],total=Ordertotal,tax=tax)
@@ -202,14 +220,14 @@ def cart():
 def order_placed():
     if request.method == 'POST' and request.form['action'] == 'logout':
         return redirect('/logout')
-    c.execute("SELECT OrderId FROM orders ORDER BY DateCreated DESC LIMIT 1")
+    c.execute(GET_LATEST_ORDER)
     conn.commit()
-    OrderId=c.fetchall()
-    return render_template("order_placed.html",OrderId=OrderId[0][0])
+    OrderInfo=c.fetchall()
+    return render_template("order_placed.html",OrderId=OrderInfo[0][0],total=OrderInfo[0][1])
 #logout route
 @app.route('/logout',methods=['POST','GET'])
 def logout():
-    c.execute('DELETE FROM carts')
+    c.execute(DELETE_CART_ITEMS)
     conn.commit()
     session.pop('logged_in', None)
     return render_template('login.html')

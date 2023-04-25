@@ -11,7 +11,7 @@
 
 <body>
   <header>
-    <h1>{{restaurant}} Menu</h1>
+    <h1>Food Delivery Website</h1>
     <div>
       <form method="POST">
         <div style="height : 10%; width: 10%; float:right;">
@@ -25,7 +25,9 @@
   </header>
   </form>
   </div>
+  <h2>{{restaurant}} Menu</h2>
   <main>
+    
     {%for item in items%}
     <div class="item">
       <form method="POST">
@@ -37,8 +39,8 @@
           <input type="hidden" id="ItemName" name="ItemName" value="{{item[2]}}">
         </div>
         <p>Description: {{item[4]}}</p>
-        <p><strong>Price:</strong> {{item[3]}}</p>
-        <p><strong>preparation Time:</strong> {{item[5]}}</p>
+        <p><strong>Price:</strong>$ {{item[3]}}</p>
+        <p><strong>preparation Time:</strong> {{item[5]}} min</p>
         <input type="submit" name="action" value="Add to Cart">
       </form>
     </div>

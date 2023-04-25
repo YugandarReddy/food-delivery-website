@@ -7,12 +7,13 @@ header {
     background-color: crimson;
     padding: 10px;
 }
+
 main {
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
     padding: 20px;
-  }
+}
 
 .container {
     margin: 50px auto;
@@ -54,11 +55,13 @@ label {
     box-sizing: border-box;
     margin-bottom: 10px;
 }
+
 .form-row {
     display: flex;
     flex-wrap: wrap;
     margin-bottom: 20px;
 }
+
 .form-row label {
     flex: 1;
     margin-right: 20px;
@@ -70,6 +73,7 @@ input[type="password"],
 input[type="email"] {
     flex: 2;
 }
+
 .form-row select {
     flex: 1;
     padding: 10px;
@@ -108,7 +112,7 @@ input[type="submit"]:hover {
     background-color: green;
 }
 
-  .item {
+.item {
     background-color: #f7f7f7;
     border: 1px solid #ccc;
     border-radius: 5px;
@@ -116,10 +120,12 @@ input[type="submit"]:hover {
     margin: 10px;
     padding: 10px;
     width: 300px;
-  }
+}
+
 .msg {
     color: crimson
 }
+
 .btn {
     padding: 20 px 20px;
     color: white;
@@ -127,9 +133,9 @@ input[type="submit"]:hover {
     text-align: center;
     border-radius: 20px;
     font-size: 18px;
-  }
+}
 
-  a:link {
+a:link {
     padding: 5px 5px;
     text-decoration: none;
-  }
+}

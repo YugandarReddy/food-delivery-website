@@ -30,8 +30,8 @@
                 </div>
                 <p><strong>Name:</strong> {{menu[2]}}</p>
                 <p><strong>Contents: </strong> {{menu[4]}}</p>
-                <p><strong>Price:</strong> {{menu[3]}}</p>
-                <p><strong>Preparation Time:</strong>{{menu[5]}}</p>
+                <p><strong>Price: </strong>$ {{menu[3]}}</p>
+                <p><strong>Preparation Time: </strong>{{menu[5]}} min</p>
                 <input type="submit" name="action" value="Remove">
             </form>
         </div>
@@ -51,11 +51,11 @@
                     <input type="text" id="contents" name="contents" required>
                 </div>
                 <div class="form-row">
-                    <label for="price">Price:</label>
+                    <label for="price">Price: $</label>
                     <input type="text" id="price" name="price" required>
                 </div>
                 <div class="form-row">
-                    <label for="preparation_time">Prep Time:</label>
+                    <label for="preparation_time">Prep Time: min</label>
                     <input type="text" id="preparation_time" name="preparation_time" required>
                 </div>
                 <input type="submit" name="action" value="Add">
