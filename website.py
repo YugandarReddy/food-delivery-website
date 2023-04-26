@@ -2,11 +2,11 @@ from flask import Flask,render_template,request, redirect, url_for,session
 from datetime import datetime
 import sqlite3
 
-app=Flask(__name__)
+app=Flask(__name__,static_url_path='/static')
 app.secret_key='123456789'
 conn = sqlite3.connect('website_data.db',check_same_thread=False)
 c = conn.cursor()
-
+1
 #Create Database Tables if they do not exist
 #Create customers Table
 c.execute('''CREATE TABLE IF NOT EXISTS Customers (CustomerId INTEGER PRIMARY KEY AUTOINCREMENT, CustomerName VARCHAR(100),Phone VARCHAR(10),Street VARCHAR(50),City VARHCAR(50),State VARCHAR(50),Pincode INTEGER,Email VARCHAR(50),Password VARCHAR(15))''')
@@ -16,20 +16,19 @@ c.execute('''CREATE TABLE IF NOT EXISTS Restaurants (RestaurantId INTEGER PRIMAR
 conn.commit()
 
 #Create items table
-c.execute('''CREATE TABLE IF NOT EXISTS Items(ItemId INTEGER PRIMARY KEY AUTOINCREMENT,RestaurantId INTEGER,ItemName VARCHAR(100),Price INTEGER,Contents VARCHAR(200),PreparationTime INTEGER,FOREIGN KEY (RestaurantId) REFERENCES restaurants(RestaurantId))''')
+c.execute('''CREATE TABLE IF NOT EXISTS Items(ItemId INTEGER PRIMARY KEY AUTOINCREMENT,RestaurantId INTEGER,ItemName VARCHAR(100),Price INTEGER,Contents VARCHAR(200),PreparationTime INTEGER,FOREIGN KEY (RestaurantId) REFERENCES restaurants(RestaurantId) ON DELETE CASCADE)''')
 conn.commit()
 
 #Create orders table
-c.execute('''
-CREATE TABLE IF NOT EXISTS Orders(OrderId INTEGER PRIMARY KEY AUTOINCREMENT,CustomerId INTEGER,RestaurantId INTEGER,OrderDate DATE,Tax INTEGER,Total INTEGER,FOREIGN KEY (CustomerId) REFERENCES Customers(CustomerId),FOREIGN KEY (RestaurantId) REFERENCES Restaurants(RestaurantId))''')
+c.execute('''CREATE TABLE IF NOT EXISTS Orders(OrderId INTEGER PRIMARY KEY AUTOINCREMENT,CustomerId INTEGER,RestaurantId INTEGER,OrderDate DATE,Tax INTEGER,Total INTEGER,FOREIGN KEY (CustomerId) REFERENCES Customers(CustomerId) ON DELETE CASCADE,FOREIGN KEY (RestaurantId) REFERENCES Restaurants(RestaurantId) ON DELETE CASCADE)''')
 conn.commit()
 
 #Create Order Details table
-c.execute('''CREATE TABLE IF NOT EXISTS OrderDetails(OrderDetailsID INTEGER PRIMARY KEY AUTOINCREMENT,OrderId INTEGER,ItemId INTEGER,FOREIGN KEY (OrderId) REFERENCES Orders(OrderId),FOREIGN KEY (ItemId) REFERENCES Items(ItemId))''')
+c.execute('''CREATE TABLE IF NOT EXISTS OrderDetails(OrderDetailsID INTEGER PRIMARY KEY AUTOINCREMENT,OrderId INTEGER,ItemId INTEGER,FOREIGN KEY (OrderId) REFERENCES Orders(OrderId) ON DELETE CASCADE,FOREIGN KEY (ItemId) REFERENCES Items(ItemId) ON DELETE CASCADE)''')
 conn.commit()
 
 #Create carts table
-c.execute('''CREATE TABLE IF NOT EXISTS Cart(CartId INTEGER PRIMARY KEY AUTOINCREMENT,ItemId INTEGER,FOREIGN KEY (ItemId) REFERENCES Items(ItemId))''')
+c.execute('''CREATE TABLE IF NOT EXISTS Cart(CartId INTEGER PRIMARY KEY AUTOINCREMENT,ItemId INTEGER,FOREIGN KEY (ItemId) REFERENCES Items(ItemId) ON DELETE CASCADE)''')
 conn.commit()
 
 #SQL Commands
@@ -43,7 +42,7 @@ ADD_MENU_ITEM="INSERT INTO Items VALUES(NULL,?,?,?,?,?)"
 DELETE_MENU_ITEM="DELETE FROM Items where ItemId=?"
 GET_REST_NAME="SELECT RestaurantName FROM Resaurants WHERE RestaurantId=?"
 GET_CUST_NAME="SELECT CustomerName FROM Customers WHERE CustomerId=?"
-
+GET_DELIVERY_FEE="SELECT DeliveryFee FROM Restaurants WHERE RestaurantId=?"
 GET_ITEMS_BY_RESTID="SELECT * FROM Items WHERE RestaurantId=?"
 GET_ITEMS_BY_ITEMID="SELECT Price from Items where ItemId=?"
 ADD_ITEMS_TO_CART="INSERT INTO Cart VALUES(NULL,?)"
@@ -54,8 +53,8 @@ ADD_TO_ORDER="INSERT INTO Orders VALUES(NULL,?,?,?,?,?)"
 ADD_TO_ORDER_DETAILS="INSERT INTO OrderDetails VALUES(NULL,?,?)"
 GET_LATEST_ORDER="SELECT OrderId, Total,OrderDate FROM Orders ORDER BY OrderDate DESC LIMIT 1"
 DELETE_CART_ITEMS="DELETE FROM Cart"
-VIEW_CUSTOMER_ORDERS="SELECT Orders.OrderId, Customers.CustomerName,Customers.Phone,Orders.Total FROM Orders INNER JOIN CUSTOMERS ON Orders.CustomerId = Customers.CustomerId WHERE RestaurantId=?"
-VIEW_RESTAURANT_ORDERS="SELECT Orders.OrderId, Restaurants.RestaurantName, Restaurants.Phone, Orders.Total FROM Orders INNER JOIN Restaurants ON Orders.RestaurantId = Restaurants.RestaurantId WHERE Orders.CustomerId =?"
+VIEW_REST_ORDERS="SELECT o.OrderId, r.RestaurantName, r.Phone, group_concat(i.ItemName, ', '), o.Total FROM Orders o INNER JOIN Restaurants r ON o.RestaurantId = r.RestaurantId INNER JOIN OrderDetails od ON o.OrderId = od.OrderId INNER JOIN Items i ON od.ItemId = i.ItemId WHERE o.CustomerId = ? GROUP BY o.OrderId"
+VIEW_CUSTOMER_ORDERS="SELECT o.OrderId, c.CustomerName, c.Phone, group_concat(i.ItemName, ', ') as OrderItems, o.Total FROM Orders o INNER JOIN Customers c ON o.CustomerId = c.CustomerId INNER JOIN OrderDetails od ON o.OrderId = od.OrderId INNER JOIN Items i ON od.ItemId = i.ItemId WHERE o.RestaurantId = ? GROUP BY o.OrderId"
 #Login Page
 @app.route('/',methods=['POST','GET'])
 @app.route('/login',methods=['POST','GET'])
@@ -128,7 +127,7 @@ def user_home():
     c.execute(CUSTOMER_DETAILS_BY_CUSTID,(CustId,))
     conn.commit()
     user=c.fetchone()
-    c.execute("SELECT * FROM restaurants")
+    c.execute("SELECT * FROM restaurants WHERE Pincode=?",(user[6],))
     conn.commit()
     restaurants=c.fetchall()
     if request.method == 'POST'and request.form['action']=='Order':
@@ -195,6 +194,7 @@ def menu():
     elif request.method == 'POST' and request.form['action'] == 'View Orders':
         return redirect('/customer_view_orders')
     return render_template('menu.html',restaurant=RestName,items=items)
+
 #cart route
 @app.route('/cart',methods=['POST','GET'])
 def cart():
@@ -203,15 +203,18 @@ def cart():
     cartItems=c.fetchall()
     c.execute(CART_TOTAL)
     conn.commit()
-    tax=0.05
     total=c.fetchone()
+    tax=0.05
+    c.execute(GET_DELIVERY_FEE,(session['RestId'],))
+    conn.commit()
+    deliveryFee=c.fetchone()
     Ordertotal=total[0]
     if Ordertotal is None:
         Ordertotal=0
         tax=0
     else:
         tax=round(Ordertotal*0.05,3)
-    Ordertotal=round(Ordertotal+tax,3)
+    Ordertotal=round(Ordertotal+tax+deliveryFee[0],3)
 
     if request.method == 'POST' and request.form['action']=='logout':
         return redirect('logout')
@@ -219,8 +222,11 @@ def cart():
         c.execute(CART_TOTAL)
         Total=c.fetchone()
         conn.commit()
+        c.execute(GET_DELIVERY_FEE,(session['RestId'],))
+        conn.commit()
+        deliveryFee=c.fetchone()
         Tax=Total[0]*0.05
-        OrderTotal=round(Total[0]+Tax,3)
+        OrderTotal=round(Total[0]+Tax+deliveryFee[0],3)
         date_created = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         c.execute(ADD_TO_ORDER,(session['UserId'],session['RestId'],date_created,Tax,OrderTotal,))
         conn.commit()
@@ -234,7 +240,7 @@ def cart():
             c.execute(ADD_TO_ORDER_DETAILS,(OrderId[0],ItemId[0]))
             conn.commit()
         return redirect('/order_placed')
-    return render_template('cart.html',items=cartItems,restaurant=session['RestName'],total=Ordertotal,tax=tax)
+    return render_template('cart.html',items=cartItems,restaurant=session['RestName'],total=Ordertotal,tax=tax,deliveryFee=deliveryFee[0])
 
 #Place Order Route
 @app.route('/order_placed',methods=['POST','GET'])
@@ -255,20 +261,21 @@ def restaurant_view_orders():
     c.execute(VIEW_CUSTOMER_ORDERS,(session['RestId'],))
     conn.commit()
     orders=c.fetchall()
-    if request.method == 'POST' and request.form['action']=='logout':
+    print(orders)
+    if request.method == 'POST' and request.form['action'] =='logout':
         return redirect("/logout")
     return render_template("/view_orders.html",profile=session['RestName'],orders=orders)
 
 #Customer View Orders Route
 @app.route('/customer_view_orders',methods=['POST','GET'])
 def customer_view_orders():
-    c.execute(VIEW_RESTAURANT_ORDERS,(session['UserId'],))
+    c.execute(VIEW_REST_ORDERS,(session['UserId'],))
     conn.commit()
     orders=c.fetchall()
     c.execute(GET_CUST_NAME,(session['UserId'],))
     conn.commit()
     CustName=c.fetchone()
-    if request.method == 'POST' and request.form['action']=='logout':
+    if request.method == 'POST' and request.form['action'] =='logout':
         return redirect("/logout")
     return render_template("view_orders.html",profile=CustName[0],orders=orders)
 

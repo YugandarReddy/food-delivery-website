@@ -27,7 +27,8 @@ h2 {
 }
 
 body {
-    background-color: #F5F5F5;
+    background-image: url("{{ url_for('static', filename='images/bg_image.jpg') }}");
+    background-size: cover;
     font-family: Arial, sans-serif;
 }
 

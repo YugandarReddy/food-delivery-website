@@ -26,6 +26,7 @@
               <th>Order Id</th>
               <th>Customer Name</th>
               <th>Phone Number</th>
+              <th>Order Items</th>
               <th>Order Total</th>
             </tr>
         {%for order in orders%}
@@ -33,7 +34,8 @@
             <td>{{order[0]}}</td>
             <td>{{order[1]}}</td>
             <td>{{order[2]}}</td>
-            <td>$ {{order[3]}}</td>
+            <td>{{order[3]}}</td>
+            <td>$ {{order[4]}}</td>
           </tr>
           {% endfor %}
           </table>
