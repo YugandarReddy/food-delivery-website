@@ -6,7 +6,7 @@ app=Flask(__name__,static_url_path='/static')
 app.secret_key='123456789'
 conn = sqlite3.connect('website_data.db',check_same_thread=False)
 c = conn.cursor()
-1
+
 #Create Database Tables if they do not exist
 #Create customers Table
 c.execute('''CREATE TABLE IF NOT EXISTS Customers (CustomerId INTEGER PRIMARY KEY AUTOINCREMENT, CustomerName VARCHAR(100),Phone VARCHAR(10),Street VARCHAR(50),City VARHCAR(50),State VARCHAR(50),Pincode INTEGER,Email VARCHAR(50),Password VARCHAR(15))''')
